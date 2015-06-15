@@ -1,0 +1,11 @@
+extends layout
+
+block content
+  a(href="/")
+    h1= title
+  div
+    form(method="post",action="/add",id="add",name="add")
+        div
+            textarea(cols="100%",rows="30%",name="data")
+
+        input(type="submit", value="send")

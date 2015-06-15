@@ -1,0 +1,22 @@
+extends layout
+
+block content
+  a(href="/")
+    h1= title
+  form
+    script(type='text/javascript').
+        function select_style(style) {
+            document.cookie = "style=" + style + "; path=/";
+            location.reload();
+        }
+
+    select(onChange='select_style(this.value)')
+        each file, key in ghlightjs_css_files
+            if style == key
+                option(value=key,selected)= key
+            else
+                option(value=key)= key
+  div(class='hljs')
+    pre
+        code(class=language)
+            != value

@@ -1,0 +1,140 @@
+var express          = require('express'),
+    compression      = require('compression'),
+    expressValidator = require('express-validator'),
+    path             = require('path'),
+    fs               = require('fs');
+    favicon          = require('serve-favicon'),
+    logger           = require('morgan'),
+    cookieParser     = require('cookie-parser'),
+    bodyParser       = require('body-parser'),
+    util             = require('util'),
+    uuid             = require('uuid'),
+    hljs             = require("./node_modules/highlight.js/lib/index.js");
+
+var app = express();
+
+var highlightjs_path    = path.join(__dirname,'node_modules/highlight.js/lib/highlight.js');
+var highlightjs_css_dir = path.join(__dirname,'node_modules/highlight.js/styles/');
+
+var ghlightjs_css_files = {};
+fs.readdirSync(highlightjs_css_dir).filter(function(file){
+    return ( /^(school_book|hybrid|brown_paper)\.css$/.test(file) ? false : true ) && /^.*\.css$/.test(file);
+}).forEach(function(file){
+    var match = file.match(/^(.+)\.css$/);
+    ghlightjs_css_files[match[1]] = file;
+    app.get(path.join('/css',file),function(req, res, next) {
+        res.append('Content-Type','text/css;');
+        res.send(fs.readFileSync(path.join(highlightjs_css_dir,file)));
+    });
+});
+
+var storage = (function(){
+    var storage_type = process.env.NODE_NOPASTE_STORAGE_TYPE || 'memory';
+    if( storage_type == 'memory' ) {
+        var Storage = function(){
+            this.data = {};
+        };
+        Storage.prototype.set = function(uuid,data) {
+            this.data[uuid] = data;
+        };
+        Storage.prototype.get = function(uuid,callback) {
+            callback(null,this.data[uuid]);
+        };
+        return new Storage();
+    } else if( storage_type == 'redis'  ) {
+        var Storage = function(){
+            var redis   = require("redis");
+            this.client = redis.createClient();
+            this.redis_hash_key = process.env.NODE_NOPASTE_REDIS_HASH_KEY || "node-nopaste-storage";
+        };
+        Storage.prototype.set = function(uuid,data) {
+            this.client.hset(this.redis_hash_key, uuid, data);
+        };
+        Storage.prototype.get = function(uuid,callback) {
+            this.client.hget(this.redis_hash_key,uuid,callback);
+        };
+        return new Storage();
+    }
+}())
+
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'jade');
+
+app.use(compression());
+app.use(logger('dev'));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(expressValidator());
+
+app.use(function (req, res, next) {
+    res.locals = {
+        title: 'No Paste',
+        ghlightjs_css_files: ghlightjs_css_files
+    };
+    next();
+});
+
+app.get('/', function(req, res, next) {
+  res.render('index');
+});
+
+app.post('/add',function(req, res, next) {
+    req.checkBody('data', 'Invalid data').notEmpty();
+
+    var errors = req.validationErrors();
+    if (errors) {
+        res.status(400).send('There have been validation errors: ' + util.inspect(errors));
+        return;
+    }
+
+    var uuid_v1 = uuid.v1();
+    storage.set(uuid_v1,req.body['data']);
+
+    res.redirect('/show?uuid=' + uuid_v1);
+});
+
+app.get('/show',function(req, res, next) {
+    req.checkQuery('uuid', 'Invalid uuid').notEmpty();
+
+    var errors = req.validationErrors();
+    if (errors) {
+        res.status(400).send('There have been validation errors: ' + util.inspect(errors));
+        return;
+    }
+
+    storage.get(req.query['uuid'],function(err,data){
+        if(err || !data) {
+            res.status(400).send('Unexpected uuid: ' + (req.query['uuid'] || ''));
+            return;
+        }
+        var results = hljs.highlightAuto(data);
+        res.render('show', { value: results['value'], language: results['language'] ,style: req.cookies['style'] || 'default' });
+    });
+});
+
+app.use(function(req, res, next) {
+  var err = new Error('Not Found');
+  err.status = 404;
+  next(err);
+});
+
+if (app.get('env') === 'development') {
+  app.use(function(err, req, res, next) {
+    res.status(err.status || 500);
+    res.render('error', {
+      message: err.message,
+      error: err
+    });
+  });
+}
+
+app.use(function(err, req, res, next) {
+  res.status(err.status || 500);
+  res.render('error', {
+    message: err.message,
+    error: {}
+  });
+});
+
+module.exports = app;

@@ -1,0 +1,8 @@
+doctype html
+html
+  head
+    title= title
+    if style
+        link(rel='stylesheet', href='/css/' + ghlightjs_css_files[style])
+  body
+    block content
