@@ -25,6 +25,7 @@
     "express-validator": "2.1.0",
     "morgan": "~1.5.3",
     "redis": "^0.12.1",
+    "lru-cache": "^2.6.4",
     "serve-favicon": "~2.2.1"
   },
   "repository": {
