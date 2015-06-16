@@ -14,7 +14,7 @@ var express          = require('express'),
 
 var app = express();
 
-var cache = LRU({ max: 500, maxAge: 60 * 60 });
+var cache = LRU({ maxAge: 60 * 60 * 24 });
 
 var highlightjs_path    = path.join(__dirname,'node_modules/highlight.js/lib/highlight.js');
 var highlightjs_css_dir = path.join(__dirname,'node_modules/highlight.js/styles/');
