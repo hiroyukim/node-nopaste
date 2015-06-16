@@ -8,10 +8,13 @@ var express          = require('express'),
     cookieParser     = require('cookie-parser'),
     bodyParser       = require('body-parser'),
     util             = require('util'),
+    LRU              = require('lru-cache'),
     uuid             = require('uuid'),
     hljs             = require("./node_modules/highlight.js/lib/index.js");
 
 var app = express();
+
+var cache = LRU({ max: 500, maxAge: 60 * 60 });
 
 var highlightjs_path    = path.join(__dirname,'node_modules/highlight.js/lib/highlight.js');
 var highlightjs_css_dir = path.join(__dirname,'node_modules/highlight.js/styles/');
@@ -103,13 +106,22 @@ app.get('/show',function(req, res, next) {
         return;
     }
 
+    var style   = req.cookies['style'] || 'default';
+
+    var results = cache.get(req.query['uuid']);
+    if( results ) {
+        return res.render('show',
+            { value: results['value'], language: results['language'] ,style: style });
+    }
+
     storage.get(req.query['uuid'],function(err,data){
         if(err || !data) {
             res.status(400).send('Unexpected uuid: ' + (req.query['uuid'] || ''));
             return;
         }
         var results = hljs.highlightAuto(data);
-        res.render('show', { value: results['value'], language: results['language'] ,style: req.cookies['style'] || 'default' });
+        cache.set(req.query['uuid'],results);
+        res.render('show', { value: results['value'], language: results['language'] ,style: style });
     });
 });
 
