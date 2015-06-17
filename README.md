@@ -3,8 +3,8 @@ node-nopaste
 
 node-nopaste is a server that shares a temporary code .(default mode: "onmemory")
 
-Attention
----------
+Note
+----
 
 The default behavior of nopaste is disappears contents of the server was shutdown Then record because "onmemory".
 It is recommended that you use by specifying the "redis" from the environment variable `NODE_NOPASTE_STORAGE_TYPE`.
