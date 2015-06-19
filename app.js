@@ -12,9 +12,13 @@ var express          = require('express'),
     uuid             = require('uuid'),
     hljs             = require("./node_modules/highlight.js/lib/index.js");
 
+var storage_type   = process.env.NODE_NOPASTE_STORAGE_TYPE   || 'memory';
+var redis_hash_key = process.env.NODE_NOPASTE_REDIS_HASH_KEY || "node-nopaste-storage";
+var lru_max_age    = process.env.NODE_NOPASTE_LRU_MAX_AGE    || 60 * 60 * 24;
+
 var app = express();
 
-var cache = LRU({ maxAge: 60 * 60 * 24 });
+var cache = LRU({ maxAge: lru_max_age });
 
 var highlightjs_path    = path.join(__dirname,'node_modules/highlight.js/lib/highlight.js');
 var highlightjs_css_dir = path.join(__dirname,'node_modules/highlight.js/styles/');
@@ -32,9 +36,9 @@ fs.readdirSync(highlightjs_css_dir).filter(function(file){
 });
 
 var storage = (function(){
-    var storage_type = process.env.NODE_NOPASTE_STORAGE_TYPE || 'memory';
+    var Storage;
     if( storage_type == 'memory' ) {
-        var Storage = function(){
+        Storage = function(){
             this.data = {};
         };
         Storage.prototype.set = function(uuid,data) {
@@ -45,10 +49,10 @@ var storage = (function(){
         };
         return new Storage();
     } else if( storage_type == 'redis'  ) {
-        var Storage = function(){
+        Storage = function(){
             var redis   = require("redis");
             this.client = redis.createClient();
-            this.redis_hash_key = process.env.NODE_NOPASTE_REDIS_HASH_KEY || "node-nopaste-storage";
+            this.redis_hash_key = redis_hash_key;
         };
         Storage.prototype.set = function(uuid,data) {
             this.client.hset(this.redis_hash_key, uuid, data);
