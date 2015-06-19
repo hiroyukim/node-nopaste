@@ -1,6 +1,6 @@
 {
   "name": "node-nopaste",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "node-nopaste is a server that shares a temporary code .",
   "main": "app.js",
   "bin": {
