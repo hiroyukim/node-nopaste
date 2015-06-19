@@ -10,7 +10,7 @@ The default behavior of nopaste is disappears contents of the server was shutdow
 It is recommended that you use by specifying the "redis" from the environment variable `NODE_NOPASTE_STORAGE_TYPE`.
 
 ```bash
-export NODE_ENV=production && export NODE_NOPASTE_STORAGE_TYPE=redis && npm run start
+export NODE_ENV=production && export NODE_NOPASTE_STORAGE_TYPE=redis && npm run start | node-nopaste
 ```
 
 ## Installation
