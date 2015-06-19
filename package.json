@@ -3,6 +3,9 @@
   "version": "0.0.3",
   "description": "node-nopaste is a server that shares a temporary code .",
   "main": "app.js",
+  "bin": {
+    "node-nopaste": "./bin/node-nopaste"
+  },
   "scripts": {
     "start": "node ./bin/node-nopaste"
   },
