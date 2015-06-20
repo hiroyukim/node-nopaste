@@ -10,7 +10,7 @@ var express          = require('express'),
     util             = require('util'),
     LRU              = require('lru-cache'),
     uuid             = require('uuid'),
-    hljs             = require("./node_modules/highlight.js/lib/index.js");
+    hljs             = require(path.join(__dirname,'node_modules','highlight.js','lib','index.js'));
 
 var storage_type   = process.env.NODE_NOPASTE_STORAGE_TYPE   || 'memory';
 var redis_hash_key = process.env.NODE_NOPASTE_REDIS_HASH_KEY || "node-nopaste-storage";
@@ -20,9 +20,9 @@ var app = express();
 
 var cache = LRU({ maxAge: lru_max_age });
 
-var highlightjs_path    = path.join(__dirname,'node_modules/highlight.js/lib/highlight.js');
-var highlightjs_css_dir = path.join(__dirname,'node_modules/highlight.js/styles/');
-
+var highlightjs_path    = path.join(__dirname,'node_modules','highlight.js','lib','highlight.js');
+var highlightjs_css_dir = path.join(__dirname,'node_modules','highlight.js','styles');
+console.log(highlightjs_css_dir);
 var ghlightjs_css_files = {};
 fs.readdirSync(highlightjs_css_dir).filter(function(file){
     return ( /^(school_book|hybrid|brown_paper)\.css$/.test(file) ? false : true ) && /^.*\.css$/.test(file);
