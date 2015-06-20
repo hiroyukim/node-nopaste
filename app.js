@@ -22,7 +22,7 @@ var cache = LRU({ maxAge: lru_max_age });
 
 var highlightjs_path    = path.join(__dirname,'node_modules','highlight.js','lib','highlight.js');
 var highlightjs_css_dir = path.join(__dirname,'node_modules','highlight.js','styles');
-console.log(highlightjs_css_dir);
+
 var ghlightjs_css_files = {};
 fs.readdirSync(highlightjs_css_dir).filter(function(file){
     return ( /^(school_book|hybrid|brown_paper)\.css$/.test(file) ? false : true ) && /^.*\.css$/.test(file);
