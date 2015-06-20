@@ -29,10 +29,6 @@ fs.readdirSync(highlightjs_css_dir).filter(function(file){
 }).forEach(function(file){
     var match = file.match(/^(.+)\.css$/);
     ghlightjs_css_files[match[1]] = file;
-    app.get(path.join('/css',file),function(req, res, next) {
-        res.append('Content-Type','text/css;');
-        res.send(fs.readFileSync(path.join(highlightjs_css_dir,file)));
-    });
 });
 
 var storage = (function(){
@@ -82,6 +78,13 @@ app.use(function (req, res, next) {
     next();
 });
 
+app.get('/css/:style',function(req,res,next) {
+    var style = req.params.style;
+    var file  = ghlightjs_css_files[style];
+    res.append('Content-Type','text/css;');
+    res.sendFile(path.join(highlightjs_css_dir,file));
+});
+
 app.get('/', function(req, res, next) {
   res.render('index');
 });
@@ -111,6 +114,9 @@ app.get('/show',function(req, res, next) {
     }
 
     var style   = req.cookies['style'] || 'default';
+
+    // To turn off after installation version number for backwards compatibility.
+    style = style.replace(/\.css/,'');
 
     var results = cache.get(req.query['uuid']);
     if( results ) {
