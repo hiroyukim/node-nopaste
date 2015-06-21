@@ -81,6 +81,10 @@ app.use(function (req, res, next) {
 app.get('/css/:style',function(req,res,next) {
     var style = req.params.style;
     var file  = ghlightjs_css_files[style];
+    if(!file) {
+        res.status(404).send('Unexpected style: ' + style);
+        return;
+    }
     res.append('Content-Type','text/css;');
     res.sendFile(path.join(highlightjs_css_dir,file));
 });
