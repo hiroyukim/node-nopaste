@@ -13,6 +13,12 @@ It is recommended that you use by specifying the "redis" from the environment va
 export NODE_ENV=production && export NODE_NOPASTE_STORAGE_TYPE=redis && npm run start | node-nopaste
 ```
 
+command for posting to the node-nopaste is shipped .
+
+```
+post-node-nopaste --help
+```
+
 ## Installation
 
 Run the following command

@@ -1,0 +1,48 @@
+#!/usr/bin/env node
+'use strict';
+var request = require('request'),
+    fs      = require('fs'),
+    url     = require('url'),
+    program = require('commander');
+
+program
+    .usage('<filepath>')
+    .option('-h, --host <hostname>', 'Set host','localhost')
+    .option('-p, --port <number>', 'Set port',3000)
+    .option('-s, --scheme <http|https>', 'Set scheme','http')
+    .parse(process.argv);
+
+var filepath = program.args[0];
+
+if(!filepath) {
+    program.help();
+}
+
+var host   = program.host,
+    port   = program.port,
+    scheme = program.scheme;
+
+var contents = fs.readFileSync(filepath);
+
+var node_nopaste_post_url = url.format({
+    protocol: scheme,
+    hostname: host,
+    port: port,
+    pathname: '/add'
+});
+
+request.post(node_nopaste_post_url, {form:{data: contents }},function(err,httpResponse,body){
+    if(err) {
+        console.warn(err);
+        process.exit(1);
+    }
+    var response_location     = url.parse(httpResponse.headers.location);
+    var node_nopaste_show_url = url.format({
+        protocol: scheme,
+        hostname: host,
+        port: port,
+        search: response_location.search,
+        pathname : response_location.pathname
+    });
+    console.log(node_nopaste_show_url);
+});
