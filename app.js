@@ -24,11 +24,22 @@ var highlightjs_path    = path.join(__dirname,'node_modules','highlight.js','lib
 var highlightjs_css_dir = path.join(__dirname,'node_modules','highlight.js','styles');
 
 var ghlightjs_css_files = {};
+var ghlightjs_image_files = {};
 fs.readdirSync(highlightjs_css_dir).filter(function(file){
-    return ( /^(school_book|hybrid|brown_paper)\.css$/.test(file) ? false : true ) && /^.*\.css$/.test(file);
+    return /^.*\.(css|png|jpg)$/.test(file);
 }).forEach(function(file){
-    var match = file.match(/^(.+)\.css$/);
-    ghlightjs_css_files[match[1]] = file;
+    var match = file.match(/^(.+)\.(.+)$/);
+    switch( match[2] ) {
+        case "css":
+            ghlightjs_css_files[match[1]] = file;
+            break;
+        case 'jpg':
+            ghlightjs_image_files[file] = 'image/jpag';
+            break;
+        default:
+            ghlightjs_image_files[file] = 'image/' + match[2];
+            break;
+    }
 });
 
 var storage = (function(){
@@ -80,12 +91,23 @@ app.use(function (req, res, next) {
 
 app.get('/css/:style',function(req,res,next) {
     var style = req.params.style;
-    var file  = ghlightjs_css_files[style];
-    if(!file) {
+
+    var file;
+    var content_type;
+    if( ghlightjs_css_files[style]) {
+        file         = ghlightjs_css_files[style];
+        content_type = 'text/css';
+    }
+    else if ( ghlightjs_image_files[style] ) {
+        file         = style;
+        content_type = ghlightjs_image_files[style];
+    }
+    else {
         res.status(404).send('Unexpected style: ' + style);
         return;
     }
-    res.append('Content-Type','text/css;');
+
+    res.append('Content-Type',content_type);
     res.sendFile(path.join(highlightjs_css_dir,file));
 });
 
