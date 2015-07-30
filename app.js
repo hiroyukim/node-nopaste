@@ -26,7 +26,7 @@ var highlightjs_css_dir = path.join(__dirname,'node_modules','highlight.js','sty
 var ghlightjs_css_files = {};
 var ghlightjs_image_files = {};
 fs.readdirSync(highlightjs_css_dir).filter(function(file){
-    return /^.*\.(css|png|jpg)$/.test(file);
+    return /^.+\.(css|png|jpg)$/.test(file);
 }).forEach(function(file){
     var match = file.match(/^(.+)\.(.+)$/);
     switch( match[2] ) {
