@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 'use strict';
-var request = require('request'),
-    fs      = require('fs'),
-    url     = require('url'),
-    program = require('commander');
+var http        = require('http'),
+    https       = require('https'),
+    fs          = require('fs'),
+    url         = require('url'),
+    querystring = require('querystring'),
+    program     = require('commander');
 
 program
     .usage('<filepath>')
@@ -24,19 +26,23 @@ var host   = program.host,
 
 var contents = fs.readFileSync(filepath);
 
-var node_nopaste_post_url = url.format({
-    protocol: scheme,
+var postBody = querystring.stringify({ data: contents.toString() });
+
+var client = scheme === 'https' ? https : http;
+
+var req = client.request({
     hostname: host,
     port: port,
-    pathname: '/add'
-});
-
-request.post(node_nopaste_post_url, {form:{data: contents }},function(err,httpResponse,body){
-    if(err) {
-        console.warn(err);
-        process.exit(1);
+    path: '/add',
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(postBody)
     }
-    var response_location     = url.parse(httpResponse.headers.location);
+}, function(httpResponse){
+    httpResponse.resume();
+
+    var response_location     = url.parse(httpResponse.headers.location || '');
     var node_nopaste_show_url = url.format({
         protocol: scheme,
         hostname: host,
@@ -46,3 +52,11 @@ request.post(node_nopaste_post_url, {form:{data: contents }},function(err,httpRe
     });
     console.log(node_nopaste_show_url);
 });
+
+req.on('error', function(err){
+    console.warn(err);
+    process.exit(1);
+});
+
+req.write(postBody);
+req.end();

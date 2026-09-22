@@ -1,6 +1,8 @@
 var express          = require('express'),
     compression      = require('compression'),
-    expressValidator = require('express-validator'),
+    body             = require('express-validator').body,
+    query            = require('express-validator').query,
+    validationResult = require('express-validator').validationResult,
     path             = require('path'),
     fs               = require('fs');
     favicon          = require('serve-favicon'),
@@ -79,7 +81,6 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(expressValidator());
 
 app.use(function (req, res, next) {
     res.locals = {
@@ -115,12 +116,10 @@ app.get('/', function(req, res, next) {
   res.render('index');
 });
 
-app.post('/add',function(req, res, next) {
-    req.checkBody('data', 'Invalid data').notEmpty();
-
-    var errors = req.validationErrors();
-    if (errors) {
-        res.status(400).send('There have been validation errors: ' + util.inspect(errors));
+app.post('/add', body('data', 'Invalid data').notEmpty(), function(req, res, next) {
+    var errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        res.status(400).send('There have been validation errors: ' + util.inspect(errors.array()));
         return;
     }
 
@@ -130,12 +129,10 @@ app.post('/add',function(req, res, next) {
     res.redirect('/show?uuid=' + uuid_v1);
 });
 
-app.get('/show',function(req, res, next) {
-    req.checkQuery('uuid', 'Invalid uuid').notEmpty();
-
-    var errors = req.validationErrors();
-    if (errors) {
-        res.status(400).send('There have been validation errors: ' + util.inspect(errors));
+app.get('/show', query('uuid', 'Invalid uuid').notEmpty(), function(req, res, next) {
+    var errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        res.status(400).send('There have been validation errors: ' + util.inspect(errors.array()));
         return;
     }
 
